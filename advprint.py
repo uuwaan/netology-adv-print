@@ -1,25 +1,30 @@
-import sys
+from functools import partial
+from itertools import chain
 
 
 def adv_print(*args, **kwargs):
-    start = str(kwargs.get("start", ""))
-    sep = str(kwargs.get("sep", " "))
-    end = str(kwargs.get("end", "\n"))
-    max_line = kwargs.get("max_line")
-    file = kwargs.get("file", sys.stdout)
-    flush = kwargs.get("flush", False)
-    in_file = kwargs.get("in_file")
+    start = str(kwargs.pop("start", ""))
+    sep = str(kwargs.pop("sep", " "))
+    end = str(kwargs.pop("end", "\n"))
+    max_line = kwargs.pop("max_line", None)
+    in_file = kwargs.pop("in_file", None)
+    _print = partial(print, sep="", end="", **kwargs)
+    prn_items = chain.from_iterable(map(_sep_specs,
+                                        _prn_items(args, start, end, sep)))
     line_len = 0
-    for item in _prn_items(args, start, end, sep):
-        for sub_item in _sep_specs(item):
-            item_len = len(sub_item)
-            if sub_item in ("\n", "\r"):
-                line_len = -1
-            elif max_line and line_len + item_len > max_line:
-                line_len = 0
-                _mfwrite((file, in_file), flush, "\n")
-            line_len += item_len
-            _mfwrite((file, in_file), flush, sub_item)
+    out_items = []
+    for item in prn_items:
+        item_len = len(item)
+        if item in ("\n", "\r"):
+            line_len = -1
+        elif max_line and line_len + item_len > max_line:
+            line_len = 0
+            out_items.append("\n")
+        line_len += item_len
+        out_items.append(item)
+    _print(*out_items)
+    if in_file:
+        _print(*out_items, file=in_file)
 
 
 def _prn_items(items, start, end, sep):
@@ -45,12 +50,3 @@ def _sep_specs(item, specs="\r\n"):
         if sub_index < sep_index:
             result.append(specs[0])
     return result
-
-
-def _mfwrite(files, flush, s):
-    for f in files:
-        if not f:
-            continue
-        f.write(s)
-        if flush:
-            f.flush()
