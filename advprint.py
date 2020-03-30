@@ -24,22 +24,27 @@ def adv_print(*args, **kwargs):
 
 def _prn_items(items, start, end, sep):
     sep_index = len(items) - 1
-    yield start
-    for index, item in enumerate(items):
-        yield str(item) + (sep if index < sep_index else "")
-    yield end
+    result = [start]
+    result.extend(
+        str(item) + (sep if index < sep_index else "")
+        for index, item in enumerate(items)
+    )
+    result.append(end)
+    return result
 
 
 def _sep_specials(item, specs="\r\n"):
-    if len(specs) == 0:
-        yield item
-    else:
-        sep_items = item.split(specs[0])
-        sep_index = len(sep_items) - 1
-        for sub_index, sub_item in enumerate(sep_items):
-            yield from _sep_specials(sub_item, specs[1:])
-            if sub_index < sep_index:
-                yield specs[0]
+    sep_items = item.split(specs[0])
+    sep_index = len(sep_items) - 1
+    result = []
+    for sub_index, sub_item in enumerate(sep_items):
+        if len(specs) > 1:
+            result.extend(_sep_specials(sub_item, specs[1:]))
+        else:
+            result.append(sub_item)
+        if sub_index < sep_index:
+            result.append(specs[0])
+    return result
 
 
 def _mfwrite(files, flush, s):
