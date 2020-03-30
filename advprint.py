@@ -11,7 +11,7 @@ def adv_print(*args, **kwargs):
     in_file = kwargs.get("in_file")
     line_len = 0
     for item in _prn_items(args, start, end, sep):
-        for sub_item in _sep_specials(item):
+        for sub_item in _sep_specs(item):
             item_len = len(sub_item)
             if sub_item in ("\n", "\r"):
                 line_len = -1
@@ -33,13 +33,13 @@ def _prn_items(items, start, end, sep):
     return result
 
 
-def _sep_specials(item, specs="\r\n"):
+def _sep_specs(item, specs="\r\n"):
     sep_items = item.split(specs[0])
     sep_index = len(sep_items) - 1
     result = []
     for sub_index, sub_item in enumerate(sep_items):
         if len(specs) > 1:
-            result.extend(_sep_specials(sub_item, specs[1:]))
+            result.extend(_sep_specs(sub_item, specs[1:]))
         else:
             result.append(sub_item)
         if sub_index < sep_index:
